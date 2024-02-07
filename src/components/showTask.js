@@ -16,7 +16,6 @@ import axios from "axios";
 
 function mapStateToProps(state) {
     return {
-        taskCnt:state.tasks.taskCnt
     };
 }
 
@@ -24,7 +23,7 @@ export default connect(()=>{})(function ShowTask(props) {
     const{dispatch,task}=props;
     const newNavigate=useNavigate();
     const [done,setDone]=useState(task.done)
-
+    
     const removeTask=async()=>{
         try{
             const reaspons = await axios.delete(`http://localhost:5000/tasks/${task.id}`)

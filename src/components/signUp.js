@@ -28,77 +28,50 @@ export default connect(mapStateToProps)(function SignUp(props) {
     let emailRef=useRef('');
     let passwordRef=useRef('');
     const newNavigate=useNavigate();
-    const[cnt,setCnt]=useState()
 
-    const getCnt=async()=>{
-        try{
-            const reaspons = await axios.get('http://localhost:5000/taskCnt')
-            if(reaspons.status===200){
-                console.log("from getCnt");
-                console.log(reaspons.data);
-                setCnt(reaspons.data)
-            }
-        }
-        catch(error){
-            console.error(error);
-        }
-    }
 
-    const putCnt=async()=>{
-        try{
-            setCnt(cnt.cnt+1)
-            const reaspons = await axios.put('http://localhost:5000/taskCnt',{cnt:cnt.cnt})
-            if(reaspons.status===200){
-                console.log("from putCnt");
-                console.log(reaspons.data);
-            }
-        }
-        catch(error){
-            console.error(error);
-        }
-    }
 
 
     const addUserNode = async ()=>{
         try{
-            getCnt()
-            const newUser={
-                firstName:firstNameRef.current.value,
-                lastName:lastNameRef.current.value,
-                email:emailRef.current.value,
-                password:passwordRef.current.value,
-                id:cnt.cnt
+            if(firstNameRef.current.value===''||emailRef.current.value===''||passwordRef.current.value===''){
+                alert('You did not fill in all the required fields');
+                return;
             }
-            console.log(newUser);
-            const reaspons=await axios.post('http://localhost:5000/users',newUser)
-            if(reaspons.status===200){
-                console.log("add user")
-                putCnt()
+            else{    
+                const reasponsGetCnt = await axios.get('http://localhost:5000/taskCnt')
+                if(reasponsGetCnt.status===200){
+                    console.log("from getCnt");
+                    console.log(reasponsGetCnt.data);
+                    const reasponsPutCnt = await axios.put('http://localhost:5000/taskCnt',{cnt:reasponsGetCnt.data.cnt+1})
+                    if(reasponsPutCnt.status===200){
+                        console.log("from putCnt");
+                        console.log(reasponsPutCnt.data);
+                    }
+                }
+                const newUser={
+                    firstName:firstNameRef.current.value,
+                    lastName:lastNameRef.current.value,
+                    email:emailRef.current.value,
+                    password:passwordRef.current.value,
+                    id:reasponsGetCnt.data.cnt
+                }
+                console.log(newUser);
+                const reasponsAddUser=await axios.post('http://localhost:5000/users',newUser)
+                if(reasponsAddUser.status===200){
+                    console.log("add user")
+                }
+                dispatch(addUser({firstName:firstNameRef.current.value,lastName:lastNameRef.current.value,email:emailRef.current.value,password:passwordRef.current.value,id:reasponsGetCnt.data.cnt}))
+                dispatch(addCurrentUser({firstName:firstNameRef.current.value,lastName:lastNameRef.current.value,email:emailRef.current.value,password:passwordRef.current.value,id:reasponsGetCnt.data.cnt}));
+                setFlagConect(true);
+                return newNavigate('/');
             }
+
+    
         }
         catch(error){
             console.error(error)
         }
-    }
-
-
-
-    const signUp = ()=>{
-        if(firstNameRef.current.value===''||emailRef.current.value===''||passwordRef.current.value===''){
-            alert('You did not fill in all the required fields');
-            return;
-        }
-        if(usersEmail.includes(emailRef.current.value)){
-            alert('Email already exists');
-            return;
-        }
-        addUserNode();
-        dispatch(addUser({firstName:firstNameRef.current.value,lastName:lastNameRef.current.value,email:emailRef.current.value,password:passwordRef.current.value}))
-        dispatch(addCurrentUser({firstName:firstNameRef.current.value,lastName:lastNameRef.current.value,email:emailRef.current.value,password:passwordRef.current.value,id:parseInt(userCount)+1}));
-        setFlagConect(true);
-        return newNavigate('/');
-        // const nevigate=useNavigate();
-        // nevigate('/showTask')
     }
 
     return(
@@ -169,7 +142,7 @@ export default connect(mapStateToProps)(function SignUp(props) {
                             fullWidth
                             variant="contained"
                             sx={{ mt: 3, mb: 2 }}
-                            onClick={signUp}
+                            onClick={addUserNode}
                         >
                         Sign Up
                         </Button>

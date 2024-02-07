@@ -13,7 +13,7 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
 import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import { Margin, MarginOutlined } from "@mui/icons-material";
-import { addTask, deleteTask,addAllUsers } from "../redux/action";
+import { addTask, deleteTask,addAllUsers, addAllTasks } from "../redux/action";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import CloseIcon from '@mui/icons-material/Close';
 import dayjs from "dayjs";
@@ -35,13 +35,12 @@ export default connect(mapStateToProps)(function AddTask(props) {
     const newNavigate = useNavigate();
     const location=useLocation()
     const taskId=location.state&&location.state.taskId;
-    const prevTask=taskList.find(x=>x.id===taskId)
+    const prevTask=taskList.find(x=>x.id===taskId)   
     const [open, setOpen] = useState(!flagConect);
     const icon = <CheckBoxOutlineBlankIcon fontSize="small" />;
     const checkedIcon = <CheckBoxIcon fontSize="small" />;
     const [date, setDate] =useState(null);
-    const [typeRef,setTypeRef]=useState(null);
-    const [userList,setUserList]=useState(users)
+    const [typeRef,setTypeRef]=useState();
     const[cnt,setCnt]=useState()
     let promotionsRef=[];
     let nameRef=useRef();
@@ -51,68 +50,54 @@ export default connect(mapStateToProps)(function AddTask(props) {
         setTypeRef(value)
     }
 
-    const getCnt=async()=>{
+    const getDataTasks=async()=>{
         try{
-            const reaspons = await axios.get('http://localhost:5000/taskCnt')
-            if(reaspons.status===200){
-                console.log("from getCnt");
-                console.log(reaspons.data);
-                setCnt(parseInt(reaspons.data))
+            if(flagConect) 
+            {
+                const reaspons = await axios.get('http://localhost:5000/tasks')
+                if(reaspons.status===200){
+                    dispatch(addAllTasks(reaspons.data.filter(item => item.userId === currentUser.id||item.id===0)))
+                    console.log("from data");
+                    console.log(reaspons.data);
+                }
             }
         }
         catch(error){
             console.error(error);
         }
     }
+
+    useEffect(()=>{
+        getDataTasks();
+        getData();
+        console.log("prevTask "+prevTask );        
+    },[])
+
 
     const getData=async()=>{
         try{
             const reaspons = await axios.get('http://localhost:5000/users')
             if(reaspons.status==200){
                 console.log("from data");
-                console.log(reaspons.data);
+                console.log(reaspons.data);    
                 dispatch(addAllUsers(reaspons.data))
-                setUserList(List(reaspons.data))
-                console.log(userList);
             }
         }
         catch(error){
             console.error(error);
         }}
-        // getData();
 
-    // }
-    useEffect(()=>{
-        getData()
-        console.log("in useEffect 2")
-     },[])
+    
 
-    //  useEffect(()=>{
-    //     getData()
-    //     console.log("in useEffect 2")
-    //  },[userList])
-
+   
  
-
-    const putCnt=async()=>{
-        try{
-            setCnt(cnt.cnt+1)
-            const reaspons = await axios.put('http://localhost:5000/taskCnt',{cnt:cnt.cnt})
-            if(reaspons.status===200){
-                console.log("from putCnt");
-                console.log(reaspons.data);
-            }
-        }
-        catch(error){
-            console.error(error);
-        }
-    }
 
     const removeTask=async()=>{
         try{
             const reaspons = await axios.delete(`http://localhost:5000/tasks/${prevTask.id}`)
             if(reaspons.status===200){
                 console.log(reaspons.data);
+                dispatch(deleteTask(prevTask.id))
             }
         }
         catch(error){
@@ -147,30 +132,75 @@ export default connect(mapStateToProps)(function AddTask(props) {
         promotionsRef=value;
     }
 
+    // const addTaskNode = async ()=>{
+    //     try{
+    //         const reasponsGet = await axios.get('http://localhost:5000/users')
+    //         if(reaspons.status==200){
+    //             console.log("from data");
+    //             console.log(reaspons.data);
+    //             dispatch(addAllUsers(reaspons.data))
+    //         }
+            
+    //         const newTask={
+    //             id:cnt.cnt,
+    //             taskTypeId: typeRef.taskTypeId, 
+    //             taskName:nameRef.current.value,
+    //             taskDetails:detailsRef.current.value,
+    //             date:dayjs(date), 
+    //             userId:current,
+    //             done:prevTask.done 
+    //         }
+    //         console.log(newTask);
+    //         const reaspons=await axios.post('http://localhost:5000/tasks',newTask)
+    //         if(reaspons.status===200){
+    //             console.log("add task")
+    //             putCnt()
+    //         }
+    //     }
+    //     catch(error){
+    //         console.log("lfghfjdk");
+    //         console.error(error)
+    //     }
+    // }
+
     const addTaskNode = async ()=>{
         try{
-            getCnt()
-            const newTask={
-                id:cnt.cnt,
+           
+                const reasponsGetCnt = await axios.get('http://localhost:5000/taskCnt')
+                if(reasponsGetCnt.status===200){
+                    console.log("from getCnt");
+                    console.log(reasponsGetCnt.data);
+                    const reasponsPutCnt = await axios.put('http://localhost:5000/taskCnt',{cnt:reasponsGetCnt.data.cnt+1})
+                    if(reasponsPutCnt.status===200){
+                        console.log("from putCnt");
+                        console.log(reasponsPutCnt.data);
+                    }
+                }
+                
+                const newTask={
+                id:reasponsGetCnt.data.cnt,
                 taskTypeId: typeRef.taskTypeId, 
                 taskName:nameRef.current.value,
                 taskDetails:detailsRef.current.value,
                 date:dayjs(date), 
                 userId:current,
                 done:prevTask.done 
+                }
+                console.log(newTask);
+                const reasponsAddTask=await axios.post('http://localhost:5000/users',newTask)
+                if(reasponsAddTask.status===200){
+                    console.log("add task")
+                }
+                dispatch(addTask({ id:0, taskTypeId: typeRef.taskTypeId, taskName:nameRef.current.value,taskDetails:detailsRef.current.value,date:dayjs(date), userId:current,done:prevTask.done }))
             }
-            console.log(newTask);
-            const reaspons=await axios.post('http://localhost:5000/tasks',newTask)
-            if(reaspons.status===200){
-                console.log("add task")
-                putCnt()
-            }
-        }
+
+    
+        
         catch(error){
-            console.log("lfghfjdk");
             console.error(error)
         }
     }
+
 
     const buttonFunc=()=>{
         if(typeRef===null||nameRef.current.value===null||detailsRef.current.value===null||promotionsRef===null||date===null){
@@ -182,11 +212,9 @@ export default connect(mapStateToProps)(function AddTask(props) {
                 console.log(typeRef);
                 setCurrent(element.id);
                 addTaskNode()
-                dispatch(addTask({ id:0, taskTypeId: typeRef.taskTypeId, taskName:nameRef.current.value,taskDetails:detailsRef.current.value,date:dayjs(date), userId:element.id,done:prevTask.done }))
             });
             if(prevTask.id!==0){
                 removeTask()
-                dispatch(deleteTask(prevTask.id))
             }
             newNavigate('/showTasks')
         }
@@ -212,14 +240,15 @@ export default connect(mapStateToProps)(function AddTask(props) {
                         id="combo-box-demo"
                         options={taskType}
                         sx={{ width: 250 }}
-                        defaultValue={taskType.find(x=>x.taskTypeId===prevTask.taskTypeId)}
+                        // defaultValue={taskType.find(x=>x.taskTypeId===prevTask.taskTypeId)}
                         getOptionLabel={(option) => option.taskTypeName}
                         renderInput={(params) => <TextField {...params} label="Type" />}
                         onChange={typeFunc}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
-                    <TextField label="Task Name" inputRef={nameRef} fullWidth defaultValue={prevTask.taskName}/>
+                    <TextField label="Task Name" inputRef={nameRef} fullWidth />
+                    {/* defaultValue={prevTask.taskName} */}
                 </Grid>
                 <Grid item xs={12}>
                     <TextField
@@ -228,7 +257,7 @@ export default connect(mapStateToProps)(function AddTask(props) {
                         fullWidth
                         maxRows={4}
                         inputRef={detailsRef}
-                        defaultValue={prevTask.taskDetails}
+                        // defaultValue={prevTask.taskDetails}
                     />
                 </Grid>
                 <Grid item xs={12} sm={6}>
@@ -242,7 +271,7 @@ export default connect(mapStateToProps)(function AddTask(props) {
                     <Autocomplete
                         multiple
                         id="checkboxes-tags-demo"
-                        options={userList}
+                        options={users}
                         disableCloseOnSelect
                         ref={promotionsRef}
                         onOpen={getData}

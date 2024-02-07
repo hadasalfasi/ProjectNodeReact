@@ -11,7 +11,6 @@ import axios from "axios"
 import { LegendToggleRounded } from "@mui/icons-material"
 
 
-
 function mapStateToProps(state) {
     return {
         list: state.tasks.taskList,
@@ -23,51 +22,26 @@ export default connect(mapStateToProps)(function ShowTasks(props) {
 
     const { dispatch,list, user,flagConect, setFlagConect} = props;
     const [open, setOpen] = useState(!flagConect);
-    const [vec, setVec] = useState([]);
-    const[hasTask,setHasTask]=useState(false)
+    const[hasTask,setHasTask]=useState()
     const newNavigate = useNavigate();
-    const [taskList,setTaskList]=useState(list)
-    console.log(vec);
+    
     const getData=async()=>{
         try{
-            const reaspons = await axios.get('http://localhost:5000/tasks')
-            if(reaspons.status===200){
-                console.log("from data");
-                console.log(reaspons.data);
-                dispatch(addAllTasks(reaspons.data))
-                setTaskList(reaspons.data)
-                console.log(taskList);
-                // setHasTask(true)
+            if(flagConect) 
+            {
+                const reaspons = await axios.get('http://localhost:5000/tasks')
+                if(reaspons.status===200){
+                    dispatch(addAllTasks(reaspons.data.filter(item => item.userId === user.id||item.id===0)))
+                    console.log("from data");
+                    console.log(reaspons.data);
+                }
             }
         }
         catch(error){
             console.error(error);
         }
     }
-
-    const filterTasks = () => {
-        if(flagConect)
-        { 
-            if (taskList === null)
-            {
-                setHasTask(false)
-                return null;
-            }
-            // setHasTask(false)
-            setVec(Array(taskList.filter(item => item.userId === user.id)));
-            if(vec===null)
-            {
-                setHasTask(false)
-                return null;
-            }
-        else{
-        }
-    }
-        else{
-            setHasTask(false)
-        }
-        console.log(vec);
-    }
+    
     // const check = () => {
     //     arr = filterTasks();
     //     if (arr !== null) {
@@ -76,13 +50,8 @@ export default connect(mapStateToProps)(function ShowTasks(props) {
     //     }
     // }
     useEffect(()=>{
-        console.log("in useEffect 2")
-        getData()
+        getData();
     },[])
-    useEffect(()=>{
-       filterTasks()
-       console.log("in useEffect 2")
-    },[taskList])
     // const arr = filterTasks();
     const handleClose = (event, reason) => {
         if (reason === 'clickaway') {
@@ -91,6 +60,12 @@ export default connect(mapStateToProps)(function ShowTasks(props) {
         setOpen(false);
         return newNavigate('/');
     };    
+
+    const noTasks=(
+        <Fragment>
+            <h1>No tasks found</h1>
+        </Fragment>
+    )
     const action = (
         <Fragment>
             <Button color="inherit" size="small" onClick={()=>{return newNavigate('/login')}}>
@@ -110,42 +85,26 @@ export default connect(mapStateToProps)(function ShowTasks(props) {
     
     return (
         <>
-            {/* {getData()} */}
-            {!flagConect && 
-                <>
-                    <Snackbar
-                        open={open}
-                        autoHideDuration={6000}
-                        onClose={handleClose}
-                        message="you're not connect"
-                        action={action}
-                    />
-                </>
+            {!flagConect&&
+                <Snackbar
+                    open={open}
+                    autoHideDuration={6000}
+                    onClose={handleClose}
+                    message="you're not connect"
+                    action={action}
+                />
             }
-            {
-            // hasTask&&flagConect && 
-            // hasTask&&taskList.map((x)=>{
-            flagConect&&taskList.map((x)=>{
-                return(
-                    <>
-                    <ShowTask task={x}></ShowTask>
-                    </>
-                )
-            })
-            // arr.map(x => {<ShowTask task={x}></ShowTask> })
+            {flagConect&&<>{
+                    list.map((x)=>{
+                        if(x.id!==0)
+                            return(
+                                <>
+                                    <ShowTask task={x}></ShowTask>
+                                </>
+                            )
+                    })
+                }</>
             }
-            {/* {!hasTask&&<h1>No tasks found</h1>} */}
-            {/* {!flagState&&<h1>No tasks found</h1>} */}
-            {
-                // flagConect&&<>{
-                //     hasTask && <>{arr.map(x => { return <ShowTask task={x}></ShowTask> })}</>
-                // }
-                // &&{!hasTask&&<h1>No tasks found</h1>}
-                // </>
-            }
-            {/* {user!==null && check()} */}
-            {/* {arr=filterTasks()} */}
-            
         </>
     )
 })

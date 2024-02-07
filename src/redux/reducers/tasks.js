@@ -9,17 +9,13 @@ const initialState = {
         { taskTypeId: 3, taskTypeName: 'project' },
         { taskTypeId: 4, taskTypeName: 'other' }
     ],
-    emptyTask: 
-        { id:0, taskTypeId: 0, taskName: '',taskDetails:'',date:null, userId: 0,done:false },
-
     taskList: [
-        { id:0, taskTypeId: 0, taskName: '',taskDetails:'',date:null, userId: 0,done:false },
+        // { id:0, taskTypeId: 0, taskName: '',taskDetails:'',date:null, userId: 0,done:false },
         // { id: 1, taskTypeId: 2, taskName: 'linux exam',taskDetails:'ללמוד למבחן',date:null, userId: 1,done:true },
         // { id: 2, taskTypeId: 3, taskName: 'java',taskDetails:'ללמוד למבחן',date:null, userId:1,done:true },
         // { id: 3, taskTypeId: 4, taskName: 'khbue',taskDetails:'ללמוד למבחן',date:null, userId:2,done:true },
         // { id: 4, taskTypeId: 5, taskName: 'C#',taskDetails:'ללמוד למבחן',date:null, userId: 1,done:false }
     ],
-    taskCnt:5
 };
 
 export default produce((state,action)=>{
@@ -37,8 +33,8 @@ export default produce((state,action)=>{
             break;
         case 'ADD_ALL_TASKS':
             {
+                console.log(action.payLoad);
                 state.taskList=action.payLoad;
-                state.taskList.push(initialState.emptyTask)
             }
             break;
         default:

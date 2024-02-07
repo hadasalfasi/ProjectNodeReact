@@ -29,7 +29,6 @@ export default connect(mapStateToProps)(function LogIn(props) {
     const emailRef=useRef('');
     const passwordRef=useRef('');
     const newNavigate=useNavigate();
-    let users;
     // const logIn=()=>{
     //     if(!(users.some(user=>(user.email===emailRef.current.value)&&(user.password===passwordRef.current.value))))
     //         alert("The email or password is incorrect")
@@ -45,16 +44,15 @@ export default connect(mapStateToProps)(function LogIn(props) {
             if(reaspons.status==200){
                 console.log("from data");
                 console.log(reaspons.data);
-                if(!(reaspons.data.some(user=>(user.email===emailRef.current.value)&&(user.password===passwordRef.current.value))))
+                if(!(reaspons.data).some(user=>(user.email==emailRef.current.value)&&(user.password==passwordRef.current.value)))
                     alert("The email or password is incorrect")
                 else{
                     setFlagConect(true)
-                    dispatch(addCurrentUser(users.find(user=>user.email===emailRef.current.value)))
+                    dispatch(addCurrentUser(reaspons.data.find(user=>user.email===emailRef.current.value)))
                     return newNavigate('/');
                 }
     
                 dispatch(addAllUsers(reaspons.data))
-                console.log(users);
 
             }
         }
@@ -62,9 +60,6 @@ export default connect(mapStateToProps)(function LogIn(props) {
             console.error(error);
         }}
 
-        useEffect(()=>{
-            getData()
-        },[])
     return(
         <Container component="main" maxWidth="xs">
             <Box
